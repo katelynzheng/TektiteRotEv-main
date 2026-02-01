@@ -17,6 +17,7 @@ bool going = false;
 
 // Main loop
 void loop() {
+  loop2();
   // Handle button presses
   if (rotev.goButtonPressed()) {
     goPressed = true;
