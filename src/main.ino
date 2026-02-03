@@ -14,6 +14,7 @@ bool goPressed = false;
 
 // Variable to see if the GO functionality is currently active
 bool going = false;
+float startTime = 0.0f;
 
 float tireRadius = 0.0301625; // in meters (1.1875 inches)
 float treadWidth = 0.119;
@@ -26,6 +27,7 @@ void loop() {
   // Handle button presses
   if (rotev.goButtonPressed()) {
     goPressed = true;
+    startTime = millis();
 
     rotev.ledWrite(0.0f, 0.1f, 0.0f);  // 10% green
   } else if (goPressed && !rotev.goButtonPressed()) {
@@ -50,16 +52,12 @@ void loop() {
     rotev.motorWrite1(-4.0f / voltage);  // Set motor 1 speed to 50%
     rotev.motorWrite2(4.0f / voltage);   // Set motor 2 voltage to 4V
 
-    float start = millis();
+    if (millis() - startTime > 2000) {
+      rotev.motorWrite1(0.0f);  // Stop motor 1
+      rotev.motorWrite2(0.0f);  // Stop motor 2
 
-    while (millis() - start < 1000) {
-      // Wait for 20 ms
-      // You can do other processing here if needed
-      stabilizePosition();
+      going = false;
     }
-
-    rotev.motorWrite1(0.0f);  // Stop motor 1
-    rotev.motorWrite2(0.0f);  // Stop motor 2
   }
 }
 
