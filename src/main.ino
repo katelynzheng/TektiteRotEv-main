@@ -17,7 +17,7 @@ bool going = false;
 
 // Main loop
 void loop() {
-  loop2();
+  stabilizePosition();
   // Handle button presses
   if (rotev.goButtonPressed()) {
     goPressed = true;
@@ -33,7 +33,6 @@ void loop() {
     going = false;
     rotev.motorEnable(false);  // Disable the motor drivers
     rotev.servoDetach();       // Disables the servo
-    Serial.println("stopp");
 
     rotev.ledWrite(0.1f, 0.0f, 0.0f);  // 10% red, since stop is pressed
   } else {
@@ -92,4 +91,22 @@ void loop2() {
   delay(50);  // This slows down the printing rate. Note that you would not want
               // a delay in your actual code, since sensor fusion must occur at
               // a high frequency
+}
+
+float yaw = 0.0f;
+unsigned long lastCheck = millis();
+
+void stabilizePosition() {
+  unsigned long now = millis();
+  float dt = (now - lastCheck) / 1000.0f;  // Convert ms to s
+  lastCheck = now;
+
+  float yawRate = rotev.readYawRateDegrees();
+
+  // Simple complementary filter
+  yaw += yawRate * dt;
+
+  // Print the stabilized yaw
+  Serial.print("Stabilized Yaw: ");
+  Serial.println(yaw);
 }
