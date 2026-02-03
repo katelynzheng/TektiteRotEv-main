@@ -15,6 +15,11 @@ bool goPressed = false;
 // Variable to see if the GO functionality is currently active
 bool going = false;
 
+float tireRadius = 0.0301625; // in meters (1.1875 inches)
+float treadWidth = 0.119;
+
+float yaw = 0.0f;
+
 // Main loop
 void loop() {
   stabilizePosition();
@@ -41,13 +46,20 @@ void loop() {
 
   // Motor writes
   if (going) {
-    rotev.motorWrite1(0.5f);  // Set motor 1 speed to 50%
-
     float voltage = rotev.getVoltage();  // Returns the voltage of the battery
+    rotev.motorWrite1(-4.0f / voltage);  // Set motor 1 speed to 50%
     rotev.motorWrite2(4.0f / voltage);   // Set motor 2 voltage to 4V
 
-    rotev.servoWrite(90.0f);  // Move the servo to the middle (range: 0-180).
-                              // This method automatically attaches the servo.
+    float start = millis();
+
+    while (millis() - start < 1000) {
+      // Wait for 20 ms
+      // You can do other processing here if needed
+      stabilizePosition();
+    }
+
+    rotev.motorWrite1(0.0f);  // Stop motor 1
+    rotev.motorWrite2(0.0f);  // Stop motor 2
   }
 }
 
@@ -93,20 +105,40 @@ void loop2() {
               // a high frequency
 }
 
-float yaw = 0.0f;
+
 unsigned long lastCheck = millis();
+
+float lastEnc1Angle = rotev.enc1Angle();
+float lastEnc2Angle = rotev.enc2Angle();
+
+float yaw2=0.0f;
 
 void stabilizePosition() {
   unsigned long now = millis();
-  float dt = (now - lastCheck) / 1000.0f;  // Convert ms to s
-  lastCheck = now;
+  float dt = (now - lastCheck);  // Convert ms to s
+  
+  if (dt >= 5) {
+    lastCheck = now;
 
-  float yawRate = rotev.readYawRateDegrees();
+    float currEnc1Angle = rotev.enc1Angle();
+    float currEnc2Angle = rotev.enc2Angle();
 
-  // Simple complementary filter
-  yaw += yawRate * dt;
+    float deltaEnc1 = currEnc1Angle - lastEnc1Angle;
+    float deltaEnc2 = currEnc2Angle - lastEnc2Angle;
 
-  // Print the stabilized yaw
-  Serial.print("Stabilized Yaw: ");
-  Serial.println(yaw);
+    lastEnc1Angle = currEnc1Angle;
+    lastEnc2Angle = currEnc2Angle;
+
+    float deltaL = (deltaEnc1 * (tireRadius));  // in meters
+    float deltaR = (deltaEnc2 * (tireRadius));  // in meters
+
+    float deltaYaw = (deltaR - deltaL) / treadWidth;  // in radians
+    yaw += deltaYaw;
+    yaw2 += rotev.readYawRate() * 0.005f;  // Approximate integration
+
+    Serial.print("Yaw (deg): ");
+    Serial.println(yaw * (180.0f / 3.14159265f));  // Convert to degrees for printing
+    Serial.print("Yaw2 (deg): ");
+    Serial.println(yaw2 * (180.0f / 3.14159265f));  // Convert to degrees for printing
+  }
 }
