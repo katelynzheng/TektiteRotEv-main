@@ -1,4 +1,7 @@
-#pragma once
+#ifndef PID_H
+#define PID_H
+
+#include "Arduino.h"
 /**
  * General-use PID class for drivetrains. It includes both
  * control calculation and settling calculation. The default
@@ -33,3 +36,5 @@ public:
 
   bool is_settled();
 };
+
+#endif

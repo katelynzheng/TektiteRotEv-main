@@ -16,18 +16,17 @@ bool goPressed = false;
 bool going = false;
 float startTime = 0.0f;
 
-float tireRadius = 0.0301625; // in meters (1.1875 inches)
-float treadWidth = 0.119;
+float tireRadius = 0.0301625f; // in meters (1.1875 inches)
+float treadWidth = 0.119f;
 
 float yaw = 0.0f;
 
 // Main loop
 void loop() {
-  stabilizePosition();
+  // stabilizePosition();
   // Handle button presses
   if (rotev.goButtonPressed()) {
     goPressed = true;
-    startTime = millis();
 
     rotev.ledWrite(0.0f, 0.1f, 0.0f);  // 10% green
   } else if (goPressed && !rotev.goButtonPressed()) {
@@ -35,6 +34,8 @@ void loop() {
 
     // Trigger the GO functionality
     going = true;
+    // startTime = millis();
+
     rotev.motorEnable(true);  // Enable the motor drivers
   } else if (rotev.stopButtonPressed()) {
     going = false;
@@ -52,12 +53,12 @@ void loop() {
     rotev.motorWrite1(-4.0f / voltage);  // Set motor 1 speed to 50%
     rotev.motorWrite2(4.0f / voltage);   // Set motor 2 voltage to 4V
 
-    if (millis() - startTime > 2000) {
-      rotev.motorWrite1(0.0f);  // Stop motor 1
-      rotev.motorWrite2(0.0f);  // Stop motor 2
+    // if (millis() - startTime > 2000) {
+    //   rotev.motorWrite1(0.0f);  // Stop motor 1
+    //   rotev.motorWrite2(0.0f);  // Stop motor 2
 
-      going = false;
-    }
+    //   going = false;
+    // }
   }
 }
 
@@ -104,14 +105,21 @@ void loop2() {
 }
 
 
-unsigned long lastCheck = millis();
+unsigned long lastCheck = -1;
 
-float lastEnc1Angle = rotev.enc1Angle();
-float lastEnc2Angle = rotev.enc2Angle();
+float lastEnc1Angle = 0.0f;
+float lastEnc2Angle = 0.0f;
 
 float yaw2=0.0f;
 
 void stabilizePosition() {
+  if (lastCheck == (unsigned long)-1) {
+    lastCheck = millis();
+    lastEnc1Angle = rotev.enc1Angle();
+    lastEnc2Angle = rotev.enc2Angle();
+    return;
+  }
+
   unsigned long now = millis();
   float dt = (now - lastCheck);  // Convert ms to s
   
