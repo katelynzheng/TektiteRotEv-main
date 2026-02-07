@@ -1,5 +1,7 @@
 #include <TektiteRotEv.h>
 
+#include "util.h"
+
 RotEv rotev;
 
 void setup() {
@@ -18,6 +20,8 @@ float startTime = 0.0f;
 
 float tireRadius = 0.0301625f; // in meters (1.1875 inches)
 float treadWidth = 0.119f;
+
+float rightToLeftPercent = 0.92f;
 
 volatile float x = 0.0f;
 volatile float y = 0.0f;
@@ -73,9 +77,13 @@ void loop() {
 
     // Trigger the GO functionality
     going = true;
-    // startTime = millis();
+    startTime = millis();
 
     rotev.motorEnable(true);  // Enable the motor drivers
+
+    run();
+
+
   } else if (rotev.stopButtonPressed()) {
     going = false;
     rotev.motorWrite1(0.0f);
@@ -233,6 +241,7 @@ void updateOdometry() {
     wheelSpeedR = deltaR / dtSec;
 
     float deltaYaw = (deltaR - deltaL) / treadWidth;  // in radians
+    float prevYaw = yaw;
     yaw += deltaYaw;
     yawGyro += rotev.readYawRate() * dtSec;  // Approximate integration
     
