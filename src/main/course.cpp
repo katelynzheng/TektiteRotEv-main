@@ -1,3 +1,4 @@
+#include "globals.h"
 #include "course.h"
 
 Command course[MAX_COMMANDS];

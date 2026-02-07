@@ -1,3 +1,6 @@
+#include "globals.h"
+#include "motion.h"
+
 void startForward(float meters) {
   distanceTraveled = 0.0f;
   targetDistance = meters;

@@ -1,24 +1,9 @@
-#include <TektiteRotEv.h>
-#include <PID.h>
-
-#include "util.h"
-#include "motion.h"
-#include "course.h"
+#include "globals.h"
 
 RotEv rotev;
 
-enum MotionType {
-  MOTION_IDLE,
-  MOTION_FORWARD,
-  MOTION_TURN
-};
+unsigned long lastCheck = -1;
 
-struct Command {
-  MotionType type;
-  float value;   // meters for forward, degrees for turn
-};
-
-MotionType motion;
 bool going = false;
 // Use a boolean variable to trigger the GO functionality only when the button
 // is released
@@ -37,11 +22,15 @@ float y = 0.0f;
 
 float yaw, yawGyro;
 
-float distanceTraveled;
+float distanceTraveled = 0.0f;
 
 // Global vars for wheel speed
 float wheelSpeedL, wheelSpeedR; 
 float targetSpeed = 0.3f;
+
+float lastEnc1Angle = 0.0f;
+float lastEnc2Angle = 0.0f;
+
 
 // Global PID controllers
 PID leftPID(0, 1.0f, 0.0f, 0.0f, 0.0f);
@@ -222,10 +211,8 @@ void loop2() {
 }
 
 
-unsigned long lastCheck = -1;
 
-float lastEnc1Angle = 0.0f;
-float lastEnc2Angle = 0.0f;
+
 
 
 void updateOdometry() {
