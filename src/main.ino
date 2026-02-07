@@ -1,6 +1,8 @@
 #include <TektiteRotEv.h>
 
 #include "util.h"
+#include "motion.h"
+#include "course.h"
 
 RotEv rotev;
 
@@ -10,12 +12,24 @@ void setup() {
                                     // at 115200 baud
 }
 
+enum MotionType {
+  MOTION_IDLE,
+  MOTION_FORWARD,
+  MOTION_TURN
+};
+
+struct Command {
+  MotionType type;
+  float value;   // meters for forward, degrees for turn
+};
+
+volatile MotionType motion = MOTION_IDLE;
+bool going = false;
 // Use a boolean variable to trigger the GO functionality only when the button
 // is released
 bool goPressed = false;
 
 // Variable to see if the GO functionality is currently active
-bool going = false;
 float startTime = 0.0f;
 
 float tireRadius = 0.0301625f; // in meters (1.1875 inches)
@@ -53,6 +67,9 @@ float angleDiff(float target, float current) {
 // Main loop
 void loop() {
   updateOdometry();
+  updateMotionState();
+  runCommandQueue();
+
   // Handle button presses
   if (rotev.goButtonPressed()) {
     goPressed = true;
@@ -75,26 +92,34 @@ void loop() {
   } else if (goPressed && !rotev.goButtonPressed()) {
     goPressed = false;
 
+    buildCourse();
+    currentCommand = 0;
     // Trigger the GO functionality
     going = true;
     startTime = millis();
 
     rotev.motorEnable(true);  // Enable the motor drivers
 
-    run();
-
-
   } else if (rotev.stopButtonPressed()) {
     going = false;
     rotev.motorWrite1(0.0f);
     rotev.motorWrite2(0.0f);
-    rotev.motorEnable(false);  // Disable the motor drivers
-    rotev.servoDetach();       // Disables the servo
-
-    rotev.ledWrite(0.1f, 0.0f, 0.0f);  // 10% red, since stop is pressed
+    rotev.motorEnable(false);
+    rotev.servoDetach();
 
     leftPID.reset();
     rightPID.reset();
+    stopMotion();
+    currentCommand = 0;
+
+    // full reset
+    distanceTraveled = 0.0f;
+    x = 0.0f;
+    y = 0.0f;
+    yaw = 0.0f;
+    yawGyro = 0.0f;
+    targetYaw = 0.0f;
+    
   } else {
     rotev.ledWrite(0.0f, 0.0f, 0.1f);  // 10% blue
   }
@@ -102,55 +127,48 @@ void loop() {
   // Motor writes
   if (going) {
     float voltage = rotev.getVoltage();
+    if (voltage < 1.0f) voltage = 1.0f;  // safety
 
-    float distanceError = targetDistance - distanceTraveled;
-    if (fabs(distanceError) < 0.01f) {  // 1 cm tolerance
-      going = false;
-      rotev.motorWrite1(0.0f);
-      rotev.motorWrite2(0.0f);
-      rotev.motorEnable(false);
-      return;
+    float targetSpeed = 0.0f;
+
+    // OUTER LOOP
+    if (motion == MOTION_FORWARD) {
+      float distanceError = targetDistance - distanceTraveled;
+      targetSpeed = distancePID.compute(distanceError);
+      targetSpeed = constrain(targetSpeed, -0.4f, 0.4f);
     }
-  
-    targetSpeed = distancePID.compute(distanceError);
-    targetSpeed = constrain(targetSpeed, -0.4f, 0.4f);
 
-    // Heading control (outer loop)
+    // MOTION_TURN → targetSpeed stays 0 (turn in place)
+
+    // HEADING CONTROL
     float yawError = angleDiff(targetYaw, yaw);
     float turnCorrection = headingPID.compute(yawError);
-    turnCorrection = constrain(turnCorrection, -0.2f, 0.2f);
+    turnCorrection = constrain(turnCorrection, -0.25f, 0.25f);
 
-    // Generate wheel speed targets
+    // WHEEL SPEED TARGETS
     float leftTarget  = targetSpeed - turnCorrection;
     float rightTarget = targetSpeed + turnCorrection;
 
-    // Optional safety clamp
     leftTarget  = constrain(leftTarget,  -0.5f, 0.5f);
     rightTarget = constrain(rightTarget, -0.5f, 0.5f);
 
-    // Speed control (inner loop)
+    // INNER SPEED LOOP
     float errorL = leftTarget  - wheelSpeedL;
     float errorR = rightTarget - wheelSpeedR;
 
     float cmdL = leftPID.compute(errorL);
     float cmdR = rightPID.compute(errorR);
 
-    // Voltage normalization
+    // VOLTAGE NORMALIZATION 
     float motorCmdL = cmdL / voltage;
     float motorCmdR = cmdR / voltage;
 
     motorCmdL = constrain(motorCmdL, -1.0f, 1.0f);
     motorCmdR = constrain(motorCmdR, -1.0f, 1.0f);
 
-    // Apply to motors
+    // APPLY 
     rotev.motorWrite1(motorCmdL);
     rotev.motorWrite2(motorCmdR);
-    // if (millis() - startTime > 2000) {
-    //   rotev.motorWrite1(0.0f);  // Stop motor 1
-    //   rotev.motorWrite2(0.0f);  // Stop motor 2
-
-    //   going = false;
-    // }
   }
 }
 
