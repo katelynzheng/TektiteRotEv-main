@@ -35,6 +35,8 @@ public:
   float compute(float error);
 
   bool is_settled();
+
+  void reset();
 };
 
 #endif
