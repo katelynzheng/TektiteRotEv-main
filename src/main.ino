@@ -18,7 +18,7 @@ struct Command {
   float value;   // meters for forward, degrees for turn
 };
 
-volatile MotionType motion;
+MotionType motion;
 bool going = false;
 // Use a boolean variable to trigger the GO functionality only when the button
 // is released
@@ -32,15 +32,15 @@ float treadWidth = 0.119f;
 
 float rightToLeftPercent = 0.92f;
 
-volatile float x = 0.0f;
-volatile float y = 0.0f;
+float x = 0.0f;
+float y = 0.0f;
 
-volatile float yaw, yawGyro;
+float yaw, yawGyro;
 
-volatile float distanceTraveled;
+float distanceTraveled;
 
 // Global vars for wheel speed
-volatile float wheelSpeedL, wheelSpeedR; 
+float wheelSpeedL, wheelSpeedR; 
 float targetSpeed = 0.3f;
 
 // Global PID controllers
