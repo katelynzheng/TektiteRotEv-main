@@ -11,9 +11,20 @@ struct Command {
   float value;
 };
 
-extern volatile MotionType motion;
-extern bool going;
-extern float distanceTraveled;
+class Motion {
+public:
+    MotionType state;
+    float targetDistance;
+    float targetYaw;
+
+    void startForward(float meters);
+    void startTurn(float degrees);
+    void stopMotion();
+    void updateMotionState();
+};
+
+
+extern Motion motion;
 
 void startForward(float meters);
 void startTurn(float degrees);

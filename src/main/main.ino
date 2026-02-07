@@ -1,6 +1,8 @@
 #include "globals.h"
+#include "course.h"
 
 RotEv rotev;
+
 
 unsigned long lastCheck = -1;
 
@@ -17,15 +19,16 @@ float treadWidth = 0.119f;
 
 float rightToLeftPercent = 0.92f;
 
-float x = 0.0f;
-float y = 0.0f;
+volatile float x = 0.0f;
+volatile float y = 0.0f;
 
-float yaw, yawGyro;
+volatile float yaw, yawGyro;
 
-float distanceTraveled = 0.0f;
+volatile float distanceTraveled = 0.0f;
 
 // Global vars for wheel speed
-float wheelSpeedL, wheelSpeedR; 
+volatile float wheelSpeedL;
+volatile float wheelSpeedR; 
 float targetSpeed = 0.3f;
 
 float lastEnc1Angle = 0.0f;
@@ -42,18 +45,11 @@ float targetDistance = 1.0f; // meters
 
 void setup() {
   rotev.begin();
-  motion = MOTION_IDLE;
+  motion.stopMotion();
   Serial.println("Hello, RotEv!");  // rotev.begin() automatically starts Serial
                                     // at 115200 baud
 }
 
-
-float angleDiff(float target, float current) {
-  float diff = target - current;
-  while (diff > PI)  diff -= 2.0f * PI;
-  while (diff < -PI) diff += 2.0f * PI;
-  return diff;
-}
 
 // Main loop
 void loop() {
@@ -100,7 +96,7 @@ void loop() {
 
     leftPID.reset();
     rightPID.reset();
-    stopMotion();
+    
     currentCommand = 0;
 
     // full reset
@@ -123,7 +119,7 @@ void loop() {
     float targetSpeed = 0.0f;
 
     // OUTER LOOP
-    if (motion == MOTION_FORWARD) {
+    if (motion.state == MOTION_FORWARD) {
       float distanceError = targetDistance - distanceTraveled;
       targetSpeed = distancePID.compute(distanceError);
       targetSpeed = constrain(targetSpeed, -0.4f, 0.4f);

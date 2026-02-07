@@ -40,8 +40,8 @@ RotEv::RotEv()
     : mpu(SPI, IMU_CS, Mpu6x00::GYRO_2000DPS, Mpu6x00::ACCEL_16G),
       driver1(DRV1_CS),
       driver2(DRV2_CS),
-      enc1(&SPI1, ENC1_CS),
-      enc2(&SPI1, ENC2_CS) {
+      enc1(&SPI, ENC1_CS),
+      enc2(&SPI, ENC2_CS) {
   // Constructor initializes MPU6500 with default settings
 }
 
@@ -87,9 +87,7 @@ void RotEv::begin() {
   Serial.begin(115200);
 
   // MPU
-  SPI.setSCK(IMU_SCK);
-  SPI.setMISO(IMU_MISO);
-  SPI.setMOSI(IMU_MOSI);
+
   SPI.begin();
   if (!mpu.begin()) {
     while (1) {
@@ -100,7 +98,7 @@ void RotEv::begin() {
   }
 
   // Analog
-  analogReadResolution(12);
+  // analogReadResolution(12);
   pinMode(DRV1_CURR, INPUT);
   pinMode(DRV2_CURR, INPUT);
   pinMode(VBUS, INPUT);
@@ -122,8 +120,8 @@ void RotEv::begin() {
   pinMode(DRV2_PH, OUTPUT);
   pinMode(DRV2_DISABLE, OUTPUT);
 
-  analogWriteFreq(10000);     // 10000 Hz = 10 kHz
-  analogWriteResolution(16);  // 16-bit resolution
+  // analogWriteFreq(10000);     // 10000 Hz = 10 kHz
+  // analogWriteResolution(16);  // 16-bit resolution
 
   this->motorEnable(false);  // Disable motors initially
   this->motorWrite1(0.0f);
@@ -146,10 +144,7 @@ void RotEv::begin() {
   }
 
   // Encoders
-  SPI1.setSCK(ENC_SCK);
-  SPI1.setMISO(ENC_MISO);
-  SPI1.setMOSI(ENC_MOSI);
-  SPI1.begin();
+  SPI.begin();
   enc1.begin();
   enc2.begin();
 

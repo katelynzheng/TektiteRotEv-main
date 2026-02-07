@@ -1,10 +1,13 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include "TektiteRotEv.h"
+#include "PID.h"
+#include "util.h"
 #include "motion.h"  // for MotionType and Command
 
+extern RotEv rotev;
 // Robot state
-extern volatile MotionType motion;
 extern bool going;
 
 // Position and odometry
@@ -22,5 +25,17 @@ extern volatile float wheelSpeedR;
 extern unsigned long lastCheck;
 extern float lastEnc1Angle;
 extern float lastEnc2Angle;
+extern float targetYaw;
+extern float targetDistance;
+
+extern PID leftPID;
+extern PID rightPID;
+extern PID headingPID;
+extern PID distancePID;
+
+// Course queue
+extern Command course[];
+extern int courseLength;
+extern int currentCommand;
 
 #endif

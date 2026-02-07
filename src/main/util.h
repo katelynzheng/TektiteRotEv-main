@@ -7,4 +7,6 @@ float reduce_negative_90_to_90(float angle);
 float to_rad(float angle_deg);
 float to_deg(float angle_rad);
 float clamp(float input, float min, float max);
+float angleDiff(float target, float current);
+
 #endif

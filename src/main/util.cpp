@@ -1,6 +1,7 @@
 #include "util.h"
+#include "math.h"
 
-float M_PI = 3.14159265358979323846;
+float PI = 3.14159265358979323846;
 /**
  * Converts an angle to an equivalent one in the range [0, 360).
  * 
@@ -56,7 +57,7 @@ float reduce_negative_90_to_90(float angle) {
  */
 
 float to_rad(float angle_deg){
-  return(angle_deg/(180.0/M_PI));
+  return(angle_deg/(180.0/PI));
 }
 
 /**
@@ -67,11 +68,18 @@ float to_rad(float angle_deg){
  */
 
 float to_deg(float angle_rad){
-  return(angle_rad*(180.0/M_PI));
+  return(angle_rad*(180.0/PI));
 }
 
 float clamp(float input, float min, float max) {
   if (input > max) return max;
   if (input < min) return min;
   return input;
+}
+
+float angleDiff(float target, float current) {
+  float diff = target - current;
+  while (diff > PI)  diff -= 2.0f * PI;
+  while (diff < -PI) diff += 2.0f * PI;
+  return diff;
 }
