@@ -7,12 +7,6 @@
 
 RotEv rotev;
 
-void setup() {
-  rotev.begin();
-  Serial.println("Hello, RotEv!");  // rotev.begin() automatically starts Serial
-                                    // at 115200 baud
-}
-
 enum MotionType {
   MOTION_IDLE,
   MOTION_FORWARD,
@@ -24,7 +18,7 @@ struct Command {
   float value;   // meters for forward, degrees for turn
 };
 
-volatile MotionType motion = MOTION_IDLE;
+volatile MotionType motion;
 bool going = false;
 // Use a boolean variable to trigger the GO functionality only when the button
 // is released
@@ -56,6 +50,13 @@ PID headingPID(0, 2.0f, 0.0f, 0.0f, 0.0f);
 float targetYaw = 0.0f;
 PID distancePID(0, 1.5f, 0.0f, 0.0f, 0.0f);
 float targetDistance = 1.0f; // meters
+
+void setup() {
+  rotev.begin();
+  motion = MOTION_IDLE;
+  Serial.println("Hello, RotEv!");  // rotev.begin() automatically starts Serial
+                                    // at 115200 baud
+}
 
 
 float angleDiff(float target, float current) {

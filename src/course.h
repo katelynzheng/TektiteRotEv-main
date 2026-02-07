@@ -11,3 +11,4 @@ extern int currentCommand;
 void forward(float meters);
 void turnLeft(float degrees);
 void turnRight(float degrees);
+void buildCourse();
