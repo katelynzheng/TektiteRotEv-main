@@ -133,3 +133,11 @@ bool PID::is_settled(){
   }
   return(false);
 }
+
+void PID::reset() {
+  accumulated_error = 0;
+  previous_error = 0;
+  output = 0;
+  time_spent_running = 0;
+  time_spent_settled = 0;
+}
